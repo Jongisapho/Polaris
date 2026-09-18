@@ -1,9 +1,11 @@
 # Polaris
 
-** Distributed Sentiment Analysis Pipeline
+Comparing a rule-based sentiment model (VADER) against a deep learning model (BiLSTM) as part of a research, built into a distributed pipeline: Python (FastAPI) for model inference, Java (Spring Boot) for ingestion and orchestration, PostgreSQL for result storage.
 
-Polaris turns a comparative sentiment analysis study into a fully working, scalable system.
-A Java Spring Boot gateway handles ingestion, rate-limiting and queuing.
-A Python FastAPI service runs the models.
-PostgreSQL is the single source of truth.
-Kafka (Optional) decouples the two sides so the system remains resilient under load.
+## Status
+In Development - Phase 1: Python ML Core
+
+## Structure
+- `sentiment_core/` - model implementations (VADER, BiLSTM) behind a shared interface
+- `tests/` - unit tests
+- `data/` - dataset (not committed)

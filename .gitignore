@@ -1,0 +1,17 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+.env
+
+# Model artifacts
+*.pt
+*.pth
+*.ckpt
+
+# Data 
+data/
+
+# OS/editor junk
+.DS_Store
+.vscode/
