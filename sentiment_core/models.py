@@ -1,5 +1,11 @@
 from abc import ABC, abstractmethod # abstractclass in python
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
+import torch
+import torch.nn.functional as F
+from architecture import BiLSTMClassifier
+from sentiment_core.preprocessing import Vocabulary
+
 class SentimentModel(ABC):
     """
     Abstract interface all sentiment models will implement.
@@ -52,3 +58,33 @@ class VaderSentimentModel(SentimentModel):
             label = "neutral"
 
         return label, compound
+
+class BiLstmSentimentModel(SentimentModel):
+    """
+    Deep learning sentiment model using a bidirectional LSTM.
+    Requires a build vocabularry and (eventually) trained weights.
+    """
+
+    LABELS = ["negative", "neutral", "positive"]
+
+    def __init__(self, vocab: "Vocabulary", checkpoint_path: str | None = None) -> None:
+        self._vocab = vocab
+        self._model = BiLSTMClassifier(vocab_size=len(vocab))
+
+        if checkpoint_path is not None:
+            self._model.load_state_dict(torch.load(checkpoint_path, map_location="cpu"))
+
+        self._model.eval()
+
+    def predict(self, text:str) -> tuple[str, float]:
+        ids = self._vocab.encode(text)
+        input_tensor = torch.tensor([ids], dtype=torch.long) # adding batch dimension
+
+        with torch.no_grad():
+            logits = self._model(input_tensor)
+            probs = F.softmax(logits, dim=1)
+
+        confidence, predicted_idx = torch.max(probs, dim=1)
+        label = self.LABELS[predicted_idx.item()]
+
+        return label, confidence.item()
