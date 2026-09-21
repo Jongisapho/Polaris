@@ -15,7 +15,7 @@ class BiLSTMClassifier(nn.Module):
         num_classes: int = 3,
         pad_idx: int = 0,
     ) -> None:
-        super().__init()
+        super().__init__()
 
         self.embedding = nn.Embedding(
             num_embeddings=vocab_size,

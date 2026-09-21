@@ -3,7 +3,7 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 import torch
 import torch.nn.functional as F
-from architecture import BiLSTMClassifier
+from sentiment_core.architecture import BiLSTMClassifier
 from sentiment_core.preprocessing import Vocabulary
 
 class SentimentModel(ABC):
@@ -88,3 +88,5 @@ class BiLstmSentimentModel(SentimentModel):
         label = self.LABELS[predicted_idx.item()]
 
         return label, confidence.item()
+
+# Sometthing is wrong
