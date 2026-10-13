@@ -1,4 +1,6 @@
 from  collections import Counter
+import json
+from pathlib import Path
 
 class Vocabulary:
     """
@@ -42,3 +44,15 @@ class Vocabulary:
 
     def __len__(self)-> int:
         return len(self.word_to_idx)
+
+    def save(self, path: str | Path) -> None:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(self.word_to_idx, f, ensure_ascii=False)
+
+    @classmethod
+    def load(cls, path: str | Path) -> "Vocabulary":
+        vocab = cls()
+        with open(path, "r", encoding="utf-8") as f:
+            vocab.word_to_idx = json.load(f)
+        vocab.idx_to_word = {idx: word for word, idx in vocab.word_to_idx.items()}
+        return vocab
