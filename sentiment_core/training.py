@@ -51,3 +51,23 @@ def make_loader(dataset: Dataset, batch_size: int, shuffle:bool) -> DataLoader:
 def compute_class_weights(labels: list[int], num_classes: int = 3) -> torch.Tensor:
     counts = torch.bincount(torch.tensor(labels), minlength=num_classes).float()
     return counts.sum() / (counts * num_classes)
+
+def train_one_epoch(model, loader, loss_fn, optimizer, device, grad_clip) -> float:
+    model.train()
+    total_loss = 0.0
+    total_examples = 0
+
+    for x, y in loader:
+        x, y = x.to(device), y.to(device)
+
+        optimizer.zero_grad()
+        logits = model(x)
+        loss = loss_fn(logits, y)
+        loss.backward()
+        nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
+        optimizer.step()
+
+        total_loss += loss.item() * len(y)
+        total_examples += len(y)
+
+    return total_loss / total_examples
