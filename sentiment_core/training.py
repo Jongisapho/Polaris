@@ -71,3 +71,25 @@ def train_one_epoch(model, loader, loss_fn, optimizer, device, grad_clip) -> flo
         total_examples += len(y)
 
     return total_loss / total_examples
+
+def evaluate(model, loader, loss_fn, device) -> dict:
+    model.eval()
+    total_loss = 0.0
+    all_true: list[int] = []
+    all_pred: list[int] = []
+
+    with torch.no_grad():
+        for x, y in loader:
+            x, y = x.to(device), y.to(device)
+            logits = model(x)
+            total_loss += loss_fn(logits, y).item() * len(y)
+            all_pred.extend(logits.argmax(dim=1).cpu().tolist())
+            all_true.extend(y.cpu().tolist())
+
+    n = len(all_true)
+    return {
+        "loss": total_loss / n,
+        "accuracy": sum(t==p for t, p in zip(all_true, all_pred)) / n,
+        "macro_f1": f1_score(all_true, all_pred, average="macro"),
+        "per_class_f1": f1_score(all_true, all_pred, average=None, labels=[0, 1, 2]).tolist()
+    }
