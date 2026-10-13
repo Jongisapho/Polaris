@@ -60,7 +60,7 @@ class VaderSentimentModel(SentimentModel):
 
         return label, compound
 
-class BiLstmSentimentModel(SentimentModel):
+class BiLSTMSentimentModel(SentimentModel):
     """
     Deep learning sentiment model using a bidirectional LSTM.
     Requires a build vocabularry and (eventually) trained weights.
