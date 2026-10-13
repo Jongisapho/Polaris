@@ -47,3 +47,7 @@ class TweetDataset(Dataset):
 
 def make_loader(dataset: Dataset, batch_size: int, shuffle:bool) -> DataLoader:
     return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
+
+def compute_class_weights(labels: list[int], num_classes: int = 3) -> torch.Tensor:
+    counts = torch.bincount(torch.tensor(labels), minlength=num_classes).float()
+    return counts.sum() / (counts * num_classes)
