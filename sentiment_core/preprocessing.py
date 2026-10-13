@@ -9,6 +9,8 @@ class Vocabulary:
 
     PAD_TOKEN = "<pad>"
     UNK_TOKEN = "<unk>"
+    MAX_LEN = 30
+    MIN_FREQ = 2
 
     def __init__(self) -> None: 
         self.word_to_idx: dict[str, int] = {
@@ -20,7 +22,7 @@ class Vocabulary:
             1: self.UNK_TOKEN,
         }
 
-    def build(self, texts: list[str], min_freq: int = 2) -> None:
+    def build(self, texts: list[str], min_freq: int = MIN_FREQ) -> None:
         counter = Counter()
         for text in texts:
             counter.update(text.lower().split()) # tokenization
@@ -31,7 +33,7 @@ class Vocabulary:
                 self.word_to_idx[word] = idx
                 self.idx_to_word[idx] = word
 
-    def encode(self, text: str, max_len: int = 40) -> list[int]:
+    def encode(self, text: str, max_len: int = MAX_LEN) -> list[int]:
         tokens = text.lower().split()
         ids = [self.word_to_idx.get(t, self.word_to_idx[self.UNK_TOKEN]) for t in tokens]
         ids = ids[:max_len]
