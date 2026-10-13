@@ -93,7 +93,7 @@ def evaluate(model, loader, loss_fn, device) -> dict:
         "loss": total_loss / n,
         "accuracy": sum(t == p for t, p in zip(all_true, all_pred)) / n,
         "macro_f1": f1_score(all_true, all_pred, average="macro"),
-        "per_class_f1":[float(v) for v in per_class]
+        "per_class_f1":[float(v) for v in per_class] # type: ignore
     }
 
 def fit(model, train_loader, val_loader, loss_fn, config: TrainConfig, device, checkpoint_dir: str | Path) -> list[dict]:
@@ -130,7 +130,7 @@ def fit(model, train_loader, val_loader, loss_fn, config: TrainConfig, device, c
     return history
 
 
-def train(train_data, val_data, config: TrainConfig, checkpoint_dir="checkpoints"):
+def train(train_data, val_data, config: TrainConfig, checkpoint_dir="checkpoints", results_path="results/bilstm_history.json"):
     set_seed(config.seed)
     device = get_device()
     train_texts, train_labels = train_data
@@ -149,8 +149,15 @@ def train(train_data, val_data, config: TrainConfig, checkpoint_dir="checkpoints
     loss_fn = nn.CrossEntropyLoss(weight=weights.to(device) if weights is not None else None)
 
     history = fit(model, train_loader, val_loader, loss_fn, config, device, checkpoint_dir)
+    save_history(history, results_path)
 
     vocab.save(Path(checkpoint_dir) / "vocab.json")
     with open(Path(checkpoint_dir) / "config.json", "w", encoding="utf-8") as f:
         json.dump({**asdict(config), "vocab_size": len(vocab)}, f, indent=2)
     return history
+
+def save_history(history: list[dict], path: str | Path) -> None:
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(history, f, indent=2)
