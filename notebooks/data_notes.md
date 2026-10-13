@@ -58,6 +58,6 @@ Most frequent tokens are function words (`the`, `to`, `in`, `a`) and the `@user`
 | Decision     | Value                            | Evidence                                           |
 |--------------|----------------------------------|----------------------------------------------------|
 | `max_len`    | 30                               | Covers over 99% of tweets (99th pct = 29)          |
-| `min_freq`   | 3                                | About 19.6k words; limits embedding size and noise |
+| `min_freq`   | 2                                | About 19.6k words; limits embedding size and noise |
 | Metrics      | Macro-F1 plus per-class F1       | Class imbalance and train/test shift               |
 | Class weights| To be tested in training         | Negative is a minority in train (15.5%)            |
