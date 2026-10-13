@@ -5,6 +5,7 @@ import torch
 import torch.nn.functional as F
 from sentiment_core.architecture import BiLSTMClassifier
 from sentiment_core.preprocessing import Vocabulary
+from sentiment_core.labels import LABELS
 
 
 class SentimentModel(ABC):
@@ -66,8 +67,6 @@ class BiLSTMSentimentModel(SentimentModel):
     Requires a build vocabularry and (eventually) trained weights.
     """
 
-    LABELS = ["negative", "neutral", "positive"]
-
     def __init__(self, vocab: "Vocabulary", checkpoint_path: str | None = None) -> None:
         self._vocab = vocab
         self._model = BiLSTMClassifier(vocab_size=len(vocab))
@@ -86,6 +85,6 @@ class BiLSTMSentimentModel(SentimentModel):
             probs = F.softmax(logits, dim=1)
 
         confidence, predicted_idx = torch.max(probs, dim=1)
-        label = self.LABELS[int(predicted_idx.item())]
+        label = LABELS[int(predicted_idx.item())]
 
         return label, confidence.item()
