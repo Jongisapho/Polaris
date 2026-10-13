@@ -114,9 +114,10 @@ def fit(model, train_loader, val_loader, loss_fn, config: TrainConfig, device, c
             "train_loss": train_loss,
             **val
         })
+        f1s = " ".join(f"{LABELS[i][:3]} {v:.3f}" for i, v in enumerate(val["per_class_f1"])) 
         print(f"epoch {epoch:2d} | train loss {train_loss:.4f} | "
               f"val loss {val['loss']:.4f} | val acc {val['accuracy']:.3f} | "
-              f"val macro-F1 {val['macro_f1']:.3f}")
+              f"val macro-F1 {val['macro_f1']:.3f} | {f1s}")
         if val["macro_f1"] > best_f1:
             best_f1 = val["macro_f1"]
             wait = 0
