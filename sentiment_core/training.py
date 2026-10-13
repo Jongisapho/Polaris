@@ -34,3 +34,16 @@ def set_seed(seed: int) -> None:
 def get_device() -> torch.device:
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+class TweetDataset(Dataset):
+    def __init__(self, texts: list[str], labels: list[int], vocab: Vocabulary) -> None:
+        self.x = torch.tensor([vocab.encode(t) for t in texts], dtype=torch.long)
+        self.y = torch.tensor(labels, dtype=torch.long)
+
+    def __len__(self) -> int:
+        return len(self.x)
+
+    def __getitem__(self, i: int) -> tuple[torch.Tensor, torch.Tensor]:
+        return self.x[i], self.y[i]
+
+def make_loader(dataset: Dataset, batch_size: int, shuffle:bool) -> DataLoader:
+    return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
