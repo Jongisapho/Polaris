@@ -100,7 +100,7 @@ def fit(model, train_loader, val_loader, loss_fn, config: TrainConfig, device, c
     checkpoint_dir = Path(checkpoint_dir)
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
-    optimizer = torch.optim.Adam(model.paramters(), lr=config.lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=config.lr)
     best_f1 = -1.0
     wait = 0
     history: list[dict] = []
@@ -129,3 +129,28 @@ def fit(model, train_loader, val_loader, loss_fn, config: TrainConfig, device, c
 
     return history
 
+
+def train(train_data, val_data, config: TrainConfig, checkpoint_dir="checkpoints"):
+    set_seed(config.seed)
+    device = get_device()
+    train_texts, train_labels = train_data
+    val_texts, val_labels = val_data
+
+    vocab = Vocabulary()
+    vocab.build(train_texts)
+
+    train_loader = make_loader(TweetDataset(train_texts, train_labels, vocab), config.batch_size
+                               , shuffle=True)
+    val_loader = make_loader(TweetDataset(val_texts, val_labels, vocab), 256, shuffle=False)
+
+    model = BiLSTMClassifier(vocab_size=len(vocab), embedding_dim=config.embedding_dim,
+                             hidden_dim=config.hidden_dim).to(device)
+    weights = compute_class_weights(train_labels) if config.use_class_weights else None
+    loss_fn = nn.CrossEntropyLoss(weight=weights.to(device) if weights is not None else None)
+
+    history = fit(model, train_loader, val_loader, loss_fn, config, device, checkpoint_dir)
+
+    vocab.save(Path(checkpoint_dir) / "vocab.json")
+    with open(Path(checkpoint_dir) / "config.json", "w", encoding="utf-8") as f:
+        json.dump({**asdict(config), "vocab_size": len(vocab)}, f, indent=2)
+    return history
