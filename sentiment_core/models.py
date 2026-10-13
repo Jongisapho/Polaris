@@ -6,6 +6,7 @@ import torch.nn.functional as F
 from sentiment_core.architecture import BiLSTMClassifier
 from sentiment_core.preprocessing import Vocabulary
 
+
 class SentimentModel(ABC):
     """
     Abstract interface all sentiment models will implement.
@@ -23,7 +24,7 @@ class SentimentModel(ABC):
 
         Returns:
             tuple[Str, float]: (label, confidence) where labels is one of "positive",
-            "negatiev" or "neutral" and confidence is a float in 
+            "negative" or "neutral" and confidence is a float in 
             [-1.0, 1.0] depending on the model.
         """
         raise NotImplementedError("Subclass must implement predict() method.")
@@ -85,8 +86,6 @@ class BiLstmSentimentModel(SentimentModel):
             probs = F.softmax(logits, dim=1)
 
         confidence, predicted_idx = torch.max(probs, dim=1)
-        label = self.LABELS[predicted_idx.item()]
+        label = self.LABELS[int(predicted_idx.item())]
 
         return label, confidence.item()
-
-# Sometthing is wrong
