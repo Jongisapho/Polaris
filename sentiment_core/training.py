@@ -15,7 +15,7 @@ from sentiment_core.preprocessing import Vocabulary
 
 
 @dataclass
-class TrainingConfig:
+class TrainConfig:
     embedding_dim: int = 100
     hidden_dim: int = 128
     batch_size: int = 64
@@ -87,9 +87,45 @@ def evaluate(model, loader, loss_fn, device) -> dict:
             all_true.extend(y.cpu().tolist())
 
     n = len(all_true)
+    per_class = f1_score(all_true, all_pred, average=None, labels=[0, 1, 2])
+
     return {
         "loss": total_loss / n,
-        "accuracy": sum(t==p for t, p in zip(all_true, all_pred)) / n,
+        "accuracy": sum(t == p for t, p in zip(all_true, all_pred)) / n,
         "macro_f1": f1_score(all_true, all_pred, average="macro"),
-        "per_class_f1": f1_score(all_true, all_pred, average=None, labels=[0, 1, 2]).tolist()
+        "per_class_f1":[float(v) for v in per_class]
     }
+
+def fit(model, train_loader, val_loader, loss_fn, config: TrainConfig, device, checkpoint_dir: str | Path) -> list[dict]:
+    checkpoint_dir = Path(checkpoint_dir)
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+
+    optimizer = torch.optim.Adam(model.paramters(), lr=config.lr)
+    best_f1 = -1.0
+    wait = 0
+    history: list[dict] = []
+
+    for epoch in range(1, config.max_epochs + 1):
+        train_loss = train_one_epoch(model, train_loader, loss_fn, optimizer, device, config.grad_clip)
+        val = evaluate(model, val_loader, loss_fn, device)
+
+        history.append({
+            "epoch": epoch,
+            "train_loss": train_loss,
+            **val
+        })
+        print(f"epoch {epoch:2d} | train loss {train_loss:.4f} | "
+              f"val loss {val['loss']:.4f} | val acc {val['accuracy']:.3f} | "
+              f"val macro-F1 {val['macro_f1']:.3f}")
+        if val["macro_f1"] > best_f1:
+            best_f1 = val["macro_f1"]
+            wait = 0
+            torch.save(model.state_dict(), checkpoint_dir / "best_model.pt")
+        else:
+            wait += 1
+            if wait >= config.patience:
+                print(f"Early stopping after {epoch} epochs.")
+                break
+
+    return history
+
