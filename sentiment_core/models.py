@@ -6,6 +6,9 @@ import torch.nn.functional as F
 from sentiment_core.architecture import BiLSTMClassifier
 from sentiment_core.preprocessing import Vocabulary
 from sentiment_core.labels import LABELS
+from pathlib import Path
+import json
+
 
 
 class SentimentModel(ABC):
@@ -67,15 +70,36 @@ class BiLSTMSentimentModel(SentimentModel):
     Requires a build vocabularry and (eventually) trained weights.
     """
 
-    def __init__(self, vocab: "Vocabulary", checkpoint_path: str | None = None) -> None:
+    def __init__(self, vocab: "Vocabulary", embedding_dim: int = 100, hidden_dim: int = 128, weights_path: str | Path | None = None) -> None:
         self._vocab = vocab
-        self._model = BiLSTMClassifier(vocab_size=len(vocab))
+        self._model = BiLSTMClassifier(vocab_size=len(vocab), embedding_dim=embedding_dim, hidden_dim=hidden_dim)
 
-        if checkpoint_path is not None:
-            self._model.load_state_dict(torch.load(checkpoint_path, map_location="cpu"))
+        if weights_path is not None:
+            state = torch.load(weights_path, map_location="cpu", weights_only=True)
+            self._model.load_state_dict(state)
 
         self._model.eval()
 
+    @classmethod
+    def from_checkpoint(cls, directory: str | Path) -> "BiLSTMSentimentModel":
+        directory = Path(directory)
+
+        with open(directory / "config.json", encoding="utf-8") as f:
+            config = json.load(f)
+
+        vocab  =  Vocabulary.load(directory / "vocab.json")
+        if len(vocab) != config["vocab_size"]:
+            raise ValueError(
+                f"Vocabulary has {len(vocab)} entries but the checkpoint was "
+                f"trained with {config['vocab_size']}. The files do not belong together."
+            )
+        return cls(
+            vocab,
+            embedding_dim=config["embedding_dim"],
+            hidden_dim=config["hidden_dim"],
+            weights_path=directory / "best_model.pt"
+        )
+    
     def predict(self, text:str) -> tuple[str, float]:
         ids = self._vocab.encode(text)
         input_tensor = torch.tensor([ids], dtype=torch.long) # adding batch dimension
