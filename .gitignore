@@ -19,3 +19,6 @@ data/*
 
 # notebook checkpoints
 .ipynb_checkpoints/
+
+# Trained model artifacts (regenerate with scripts/train_bilstm.py)
+checkpoints/
